@@ -4,7 +4,7 @@ const { GoogleGenerativeAI } = require('@google/generative-ai');
 
 const TELEGRAM_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
-const ALLOWED_CHAT_ID = process.env.ALLOWED_CHAT_ID; // your chat ID: 7244947677
+const ALLOWED_CHAT_ID = process.env.ALLOWED_CHAT_ID; // 7244947677
 
 const bot = new TelegramBot(TELEGRAM_TOKEN, { polling: true });
 const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
@@ -55,31 +55,35 @@ bot.on('message', async (msg) => {
   // Show typing indicator
   bot.sendChatAction(chatId, 'typing');
 
-  // Add user message to history
-  conversations[chatId].push({ role: 'user', parts: [{ text }] });
-
-  // Keep last 20 messages to avoid token overflow
-  if (conversations[chatId].length > 20) {
-    conversations[chatId] = conversations[chatId].slice(-20);
-  }
-
   try {
     const model = genAI.getGenerativeModel({
-      model: 'gemini-2.0-flash',
+      model: 'gemini-1.5-flash',
       systemInstruction: SYSTEM_PROMPT,
     });
 
-    const chat = model.startChat({ history: conversations[chatId].slice(0, -1) });
+    // Build history (all messages except the latest)
+    const history = conversations[chatId].map(m => ({
+      role: m.role,
+      parts: [{ text: m.content }],
+    }));
+
+    const chat = model.startChat({ history });
     const result = await chat.sendMessage(text);
     const reply = result.response.text();
 
-    // Add assistant reply to history
-    conversations[chatId].push({ role: 'model', parts: [{ text: reply }] });
+    // Save to history
+    conversations[chatId].push({ role: 'user', content: text });
+    conversations[chatId].push({ role: 'model', content: reply });
+
+    // Keep last 20 messages
+    if (conversations[chatId].length > 20) {
+      conversations[chatId] = conversations[chatId].slice(-20);
+    }
 
     bot.sendMessage(chatId, reply, { parse_mode: 'Markdown' });
 
   } catch (err) {
-    console.error('Gemini API error:', err);
+    console.error('Gemini API error:', err.message || err);
     bot.sendMessage(chatId, '⚠️ Error reaching Gemini. Try again in a moment.');
   }
 });
