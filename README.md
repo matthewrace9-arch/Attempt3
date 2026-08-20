@@ -27,6 +27,24 @@ The bot posts a live status message (Queueing → Preparing → Processing) and
 uploads the finished MP4 to the chat. Renders typically take 1–5 minutes; one
 generation runs per chat at a time.
 
+## /film — multi-scene dog PT visit video
+
+`/film` builds the "dogs at Boise Foothills Physical Therapy" video from real
+reference photos of the office:
+
+1. Scenes 1 and 3 ship with the repo (`assets/`, frames from the real footage).
+2. Send the front-desk photo with the caption `/scene 2`, and a photo of the
+   PT/exercise area with the caption `/scene 4`. (A `/scene <n>` photo also
+   overrides a bundled frame.)
+3. Send `/film`. For each scene the bot removes humans from the reference
+   frame (Gemini image editing via `GEMINI_API_KEY`), animates it with Hailuo
+   image-to-video (6s @ 768P), stitches the clips with crossfades (ffmpeg via
+   `nixpacks.toml`), and sends back the finished MP4.
+
+Scenes without a reference image are skipped with a note. Uses
+`HAILUO_I2V_MODEL` (default `MiniMax-Hailuo-02`) since image-to-video requires
+first-frame support.
+
 ## Hailuo (MiniMax) setup
 
 1. Create an account at [platform.minimax.io](https://platform.minimax.io) and add credit

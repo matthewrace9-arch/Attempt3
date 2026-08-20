@@ -1,0 +1,3 @@
+# ffmpeg is needed by the /film pipeline to stitch Hailuo clips together
+[phases.setup]
+aptPkgs = ["ffmpeg"]

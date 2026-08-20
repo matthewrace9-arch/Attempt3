@@ -2,6 +2,7 @@ require('dotenv').config();
 const TelegramBot = require('node-telegram-bot-api');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 const hailuo = require('./hailuo');
+const film = require('./film');
 
 const TELEGRAM_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
@@ -137,6 +138,66 @@ bot.on('message', async (msg) => {
     return;
   }
 
+  // /scene <n>: photo caption that stores a reference image for the /film pipeline
+  if (text && /^\/scene(@\w+)?(\s|$)/.test(text)) {
+    const n = parseInt(text.replace(/^\/scene(@\w+)?/, '').trim(), 10);
+    if (!n || n < 1 || n > film.SCENES.length) {
+      bot.sendMessage(chatId, `🎞️ Usage: send a photo with the caption "/scene <1-${film.SCENES.length}>".`);
+      return;
+    }
+    try {
+      const dataUri = await getPhotoDataUri(msg);
+      if (!dataUri) {
+        bot.sendMessage(chatId, '🎞️ Attach a photo (or reply to one) with the /scene caption.');
+        return;
+      }
+      film.saveSceneImage(n, Buffer.from(dataUri.split(',')[1], 'base64'));
+      const scene = film.SCENES[n - 1];
+      bot.sendMessage(chatId, `✅ Saved reference for scene ${n} (${scene.name}). Run /film when ready.`);
+    } catch (err) {
+      bot.sendMessage(chatId, `⚠️ Could not save scene photo: ${err.message || err}`);
+    }
+    return;
+  }
+
+  // /film: run the multi-scene dog PT video pipeline
+  if (text === '/film') {
+    if (!hailuo.isConfigured()) {
+      bot.sendMessage(chatId, '⚠️ Set MINIMAX_API_KEY first — /film generates its scenes with Hailuo.');
+      return;
+    }
+    if (videoJobs.has(chatId)) {
+      bot.sendMessage(chatId, '⏳ A generation is already running for this chat.');
+      return;
+    }
+    videoJobs.add(chatId);
+    try {
+      const status = await bot.sendMessage(chatId, '🎬 Starting the film pipeline…');
+      const onStatus = (line) =>
+        bot.editMessageText(line, { chat_id: chatId, message_id: status.message_id }).catch(() => {});
+
+      const { videoPath, made, skipped, cleanedCount } = await film.makeFilm(onStatus);
+
+      await onStatus('🎬 Uploading the finished film…');
+      await bot.sendVideo(chatId, videoPath, {
+        caption:
+          `🎥 Dog PT visit — scenes: ${made.map((s) => s.name).join(', ')}` +
+          (skipped.length
+            ? `\n(⚠️ skipped ${skipped.map((s) => `${s.n} ${s.name}`).join(', ')} — no reference photo; ` +
+              'send one with a "/scene <n>" caption and rerun /film)'
+            : '') +
+          (cleanedCount < made.length ? '\n(⚠️ some frames could not be auto-cleaned of people)' : ''),
+      });
+      await onStatus('✅ Film delivered.');
+    } catch (err) {
+      console.error('Film error:', err.message || err);
+      bot.sendMessage(chatId, `⚠️ Film error: ${err.message || err}`);
+    } finally {
+      videoJobs.delete(chatId);
+    }
+    return;
+  }
+
   if (!text || text.startsWith('/')) {
     if (text === '/start') {
       bot.sendMessage(chatId, '👋 Hey Matt! Gemini chat + Hailuo video are connected and ready.');
@@ -150,6 +211,8 @@ bot.on('message', async (msg) => {
         '/video <prompt> - Generate a video with Hailuo (MiniMax)\n' +
         '   • attach/reply to a photo for image-to-video\n' +
         '   • options: --6s --10s --512p --768p --1080p\n' +
+        '/scene <n> - (photo caption) save a reference image for /film\n' +
+        '/film - Make the multi-scene dog PT visit video\n' +
         '/clear - Clear conversation history\n' +
         '/help - Show this menu\n\n' +
         'Just type anything to chat with Gemini!'
