@@ -201,6 +201,18 @@ bot.on('message', async (msg) => {
   if (!text || text.startsWith('/')) {
     if (text === '/start') {
       bot.sendMessage(chatId, '👋 Hey Matt! Gemini chat + Hailuo video are connected and ready.');
+    } else if (text === '/debug') {
+      const flag = (v) => (process.env[v] ? '✅ set' : '❌ missing');
+      bot.sendMessage(chatId,
+        '🔧 Environment check:\n' +
+        `TELEGRAM_BOT_TOKEN: ${flag('TELEGRAM_BOT_TOKEN')}\n` +
+        `GEMINI_API_KEY: ${flag('GEMINI_API_KEY')}\n` +
+        `MINIMAX_API_KEY: ${flag('MINIMAX_API_KEY')}\n` +
+        `MINIMAX_GROUP_ID: ${flag('MINIMAX_GROUP_ID')}\n` +
+        `ALLOWED_CHAT_ID: ${flag('ALLOWED_CHAT_ID')}\n\n` +
+        'Similar names in env: ' +
+        (Object.keys(process.env).filter((k) => /mini|max|hailuo/i.test(k)).join(', ') || 'none')
+      );
     } else if (text === '/clear') {
       conversations[chatId] = [];
       bot.sendMessage(chatId, '🗑️ Conversation cleared.');
