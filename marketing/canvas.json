@@ -1,0 +1,11 @@
+{
+  "artboards": [
+    { "file": "Main.dc.html", "title": "Pricing Sheet", "x": 0, "y": 0, "w": 816, "h": 1056 },
+    { "file": "PamphletOutside.dc.html", "title": "Pamphlet — Outside", "x": 936, "y": 0, "w": 1056, "h": 816 },
+    { "file": "PamphletInside.dc.html", "title": "Pamphlet — Inside", "x": 936, "y": 956, "w": 1056, "h": 816 }
+  ],
+  "annotations": [
+    { "id": "start-here", "x": 0, "y": -190, "w": 320, "text": "Prices are suggested starting points — click any number to change it. Bracketed [placeholders] are yours to fill in.\nPamphlet fold order (Outside sheet): right panel = front cover, middle = back cover, left panel folds inside." }
+  ],
+  "launch": { "view": "canvas" }
+}
