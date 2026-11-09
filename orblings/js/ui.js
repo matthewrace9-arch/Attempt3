@@ -307,13 +307,23 @@
       bindSeg('#set-controls', 'controls');
       bindSeg('#set-quality', 'quality');
       $('#btn-fullscreen').addEventListener('click', () => UI.toggleFullscreen());
-      $('#btn-reset').addEventListener('click', () => {
-        if (window.confirm('Reset all progress, skins and trophies? This cannot be undone.')) {
-          OB.Profile.reset();
-          $('#name-input').value = '';
-          this.toast('🧹', 'Progress reset');
-          this.refreshMenu();
+      // two-tap confirmation (native confirm() dialogs are blocked in some web views)
+      const resetBtn = $('#btn-reset');
+      let armed = 0;
+      resetBtn.addEventListener('click', () => {
+        const now = Date.now();
+        if (now - armed > 3000) {
+          armed = now;
+          resetBtn.textContent = 'Tap again to erase everything';
+          setTimeout(() => { if (Date.now() - armed >= 3000) resetBtn.textContent = 'Reset progress'; }, 3100);
+          return;
         }
+        armed = 0;
+        resetBtn.textContent = 'Reset progress';
+        OB.Profile.reset();
+        $('#name-input').value = '';
+        this.toast('🧹', 'Progress reset');
+        this.refreshMenu();
       });
     },
     syncSettings() {
