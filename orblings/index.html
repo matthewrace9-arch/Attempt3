@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <title>ORBLINGS.io</title>
+  <meta name="description" content="Collect energy, grow your moons, and become the biggest orbling in the arena." />
+  <meta name="theme-color" content="#0b0620" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Orblings" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="icon" href="assets/icon.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="assets/icon.svg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <canvas id="game" aria-label="Game arena"></canvas>
+
+  <!-- ===================== HUD ===================== -->
+  <div id="hud" class="hidden" aria-live="off">
+    <div id="xpbar"><div id="xpfill"></div></div>
+    <div class="hud-tl">
+      <div class="hud-score-label">SCORE</div>
+      <div id="hud-score">0</div>
+      <div class="hud-chips">
+        <span class="chip chip-power" title="Power (size)"><i class="ico-bolt"></i><b id="hud-power">20</b></span>
+        <span class="chip chip-level">Lv <b id="hud-level">1</b></span>
+      </div>
+      <canvas id="minimap" width="168" height="168"></canvas>
+    </div>
+    <button id="btn-pause" class="icon-btn" aria-label="Pause"><span class="pause-icon"></span></button>
+    <ol id="mini-lb"></ol>
+    <button id="btn-ability" aria-label="Pulse ability">
+      <span class="ab-ring"></span>
+      <span class="ab-core">
+        <svg viewBox="0 0 48 48" width="40" height="40" aria-hidden="true">
+          <circle cx="24" cy="24" r="7" fill="#fff" />
+          <circle cx="24" cy="24" r="14" fill="none" stroke="#fff" stroke-width="3" stroke-dasharray="5 6" />
+          <circle cx="24" cy="24" r="21" fill="none" stroke="#fff" stroke-opacity=".55" stroke-width="2.5" />
+        </svg>
+        <span class="ab-label">PULSE</span>
+      </span>
+    </button>
+    <div id="hint" class="hidden">
+      <div class="hint-row"><span class="hint-ico">👆</span><span id="hint-move">Drag anywhere to move</span></div>
+      <div class="hint-row"><span class="hint-ico">✨</span><span>Eat energy to grow &amp; earn moons</span></div>
+      <div class="hint-row"><span class="hint-ico">🌙</span><span id="hint-pulse">Moons hurt rivals · <b>PULSE</b> flings them</span></div>
+      <div class="hint-row"><span class="hint-ico">🎯</span><span><b class="green">Green</b> names = prey · <b class="red">Red</b> = run!</span></div>
+    </div>
+  </div>
+
+  <div id="toasts" aria-live="polite"></div>
+
+  <!-- ===================== MAIN MENU ===================== -->
+  <section id="screen-menu" class="screen active">
+    <div class="menu-top">
+      <div class="profile-chip">
+        <span class="lvl-badge">Lv <b id="menu-level">1</b></span>
+        <div class="menu-xp"><div id="menu-xpfill"></div></div>
+      </div>
+      <div class="shard-chip"><i class="ico-shard"></i><b id="menu-shards">0</b></div>
+    </div>
+
+    <div class="logo" aria-label="Orblings.io">
+      <div class="logo-orb">
+        <span class="logo-moon m1"></span><span class="logo-moon m2"></span><span class="logo-moon m3"></span>
+        <span class="logo-eye l"></span><span class="logo-eye r"></span>
+      </div>
+      <h1><span class="logo-word">ORBLINGS</span><span class="logo-io">.io</span></h1>
+      <p class="tagline">Grow. Orbit. Outshine.</p>
+    </div>
+
+    <button id="skin-preview-btn" class="skin-preview" aria-label="Change skin">
+      <canvas id="skin-preview" width="200" height="200"></canvas>
+      <span class="skin-preview-name" id="skin-preview-name">Ember</span>
+    </button>
+
+    <div class="menu-form">
+      <input id="name-input" type="text" maxlength="14" placeholder="Your name" autocomplete="off" autocapitalize="words" spellcheck="false" enterkeyhint="go" />
+      <button id="btn-play" class="btn btn-play">PLAY</button>
+      <div class="best-line">Best score <b id="menu-best">0</b></div>
+    </div>
+
+    <nav class="menu-nav">
+      <button class="nav-btn" data-open="skins"><span class="nav-ico">🎨</span>Skins</button>
+      <button class="nav-btn" data-open="leaderboard"><span class="nav-ico">🏆</span>Ranks</button>
+      <button class="nav-btn" data-open="achievements"><span class="nav-ico">🎖️</span>Trophies</button>
+      <button class="nav-btn" data-open="settings"><span class="nav-ico">⚙️</span>Settings</button>
+    </nav>
+  </section>
+
+  <!-- ===================== SKINS ===================== -->
+  <section id="screen-skins" class="screen panel-screen">
+    <header class="panel-head">
+      <button class="icon-btn back" data-back aria-label="Back">‹</button>
+      <h2>Skins</h2>
+      <div class="shard-chip small"><i class="ico-shard"></i><b class="shards-val">0</b></div>
+    </header>
+    <p class="panel-note">Skins are cosmetic only — every orbling plays the same.</p>
+    <div id="skin-grid" class="skin-grid"></div>
+  </section>
+
+  <!-- ===================== LEADERBOARD ===================== -->
+  <section id="screen-leaderboard" class="screen panel-screen">
+    <header class="panel-head">
+      <button class="icon-btn back" data-back aria-label="Back">‹</button>
+      <h2>Leaderboard</h2>
+      <span></span>
+    </header>
+    <div class="your-rank" id="lb-your-rank"></div>
+    <ol id="lb-list" class="lb-list"></ol>
+    <p class="panel-note">Offline league: your best runs ranked against the arena's legendary AI rivals.</p>
+  </section>
+
+  <!-- ===================== ACHIEVEMENTS ===================== -->
+  <section id="screen-achievements" class="screen panel-screen">
+    <header class="panel-head">
+      <button class="icon-btn back" data-back aria-label="Back">‹</button>
+      <h2>Trophies</h2>
+      <span id="ach-count" class="count-chip">0/0</span>
+    </header>
+    <div id="stats-strip" class="stats-strip"></div>
+    <ul id="ach-list" class="ach-list"></ul>
+  </section>
+
+  <!-- ===================== SETTINGS ===================== -->
+  <section id="screen-settings" class="screen panel-screen modal">
+    <header class="panel-head">
+      <button class="icon-btn back" data-back aria-label="Back">‹</button>
+      <h2>Settings</h2>
+      <span></span>
+    </header>
+    <div class="settings-list">
+      <label class="set-row"><span>Sound effects</span><input type="checkbox" id="set-sound" class="toggle" /></label>
+      <label class="set-row"><span>Music</span><input type="checkbox" id="set-music" class="toggle" /></label>
+      <label class="set-row" id="row-haptics"><span>Vibration</span><input type="checkbox" id="set-haptics" class="toggle" /></label>
+      <label class="set-row"><span>Pulse button on left</span><input type="checkbox" id="set-left" class="toggle" /></label>
+      <div class="set-row col">
+        <span>Controls</span>
+        <div class="seg" id="set-controls">
+          <button data-val="joystick">Joystick</button>
+          <button data-val="follow">Follow finger</button>
+        </div>
+      </div>
+      <div class="set-row col">
+        <span>Graphics</span>
+        <div class="seg" id="set-quality">
+          <button data-val="auto">Auto</button>
+          <button data-val="high">High</button>
+          <button data-val="low">Battery</button>
+        </div>
+      </div>
+      <button class="btn btn-secondary" id="btn-fullscreen">Toggle fullscreen</button>
+      <button class="btn btn-danger" id="btn-reset">Reset progress</button>
+      <p class="version">ORBLINGS.io v<span id="version"></span> · Tip: “Add to Home Screen” for true fullscreen on iPhone.</p>
+    </div>
+  </section>
+
+  <!-- ===================== PAUSE ===================== -->
+  <section id="screen-pause" class="screen overlay">
+    <div class="card">
+      <h2 class="card-title">Paused</h2>
+      <div class="pause-stats" id="pause-stats"></div>
+      <button class="btn btn-play" id="btn-resume">Resume</button>
+      <button class="btn btn-secondary" data-open="settings">Settings</button>
+      <button class="btn btn-ghost" id="btn-quit">Leave match</button>
+    </div>
+  </section>
+
+  <!-- ===================== GAME OVER ===================== -->
+  <section id="screen-over" class="screen overlay">
+    <div class="card over-card">
+      <div class="over-kicker" id="over-kicker">ABSORBED</div>
+      <div class="over-by" id="over-by">by Somebody</div>
+      <div class="over-score-label">FINAL SCORE</div>
+      <div class="over-score" id="over-score">0</div>
+      <div class="new-best hidden" id="over-best">NEW BEST!</div>
+      <div class="over-stats">
+        <div><b id="over-rank">#1</b><span>Rank</span></div>
+        <div><b id="over-peak">#1</b><span>Best rank</span></div>
+        <div><b id="over-kills">0</b><span>Takedowns</span></div>
+        <div><b id="over-time">0:00</b><span>Survived</span></div>
+      </div>
+      <div class="over-xp">
+        <div class="over-xp-top"><span>Lv <b id="over-level">1</b></span><span id="over-xp-gain">+0 XP</span></div>
+        <div class="over-xpbar"><div id="over-xpfill"></div></div>
+        <div class="over-shards"><i class="ico-shard"></i> <b id="over-shards">+0</b> shards</div>
+      </div>
+      <div id="over-unlocks" class="over-unlocks"></div>
+      <button class="btn btn-play" id="btn-again">PLAY AGAIN</button>
+      <button class="btn btn-reward hidden" id="btn-reward">▶ Watch ad: double shards</button>
+      <div class="over-row">
+        <button class="btn btn-secondary" id="btn-menu">Menu</button>
+        <button class="btn btn-secondary" data-open="leaderboard">Ranks</button>
+      </div>
+    </div>
+  </section>
+
+  <div id="rotate-hint"><div><div class="rot-phone"></div>Rotate your phone to portrait</div></div>
+
+  <!-- Engine modules (plain scripts: works from file:// and any static host) -->
+  <script src="js/config.js"></script>
+  <script src="js/utils.js"></script>
+  <script src="js/storage.js"></script>
+  <script src="js/cosmetics.js"></script>
+  <script src="js/physics.js"></script>
+  <script src="js/entities.js"></script>
+  <script src="js/collision.js"></script>
+  <script src="js/ai.js"></script>
+  <script src="js/world.js"></script>
+  <script src="js/net.js"></script>
+  <script src="js/effects.js"></script>
+  <script src="js/audio.js"></script>
+  <script src="js/haptics.js"></script>
+  <script src="js/input.js"></script>
+  <script src="js/renderer.js"></script>
+  <script src="js/progression.js"></script>
+  <script src="js/monetization.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/game.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>

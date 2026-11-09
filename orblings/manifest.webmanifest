@@ -1,0 +1,14 @@
+{
+  "name": "ORBLINGS.io",
+  "short_name": "Orblings",
+  "description": "Collect energy, grow your moons, and become the biggest orbling in the arena.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "fullscreen",
+  "orientation": "portrait",
+  "background_color": "#0b0620",
+  "theme_color": "#0b0620",
+  "icons": [
+    { "src": "assets/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}

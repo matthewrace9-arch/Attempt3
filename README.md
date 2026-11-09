@@ -83,3 +83,10 @@ node index.js
 ```
 
 Requires Node 18+ (uses the built-in `fetch`).
+
+## ORBLINGS.io (mobile .io game)
+
+[`orblings/`](orblings/) holds a self-contained mobile browser game. It's plain HTML5
+Canvas and JavaScript with no build step. Open `orblings/index.html`, or run
+`node orblings/serve.js` and visit the printed URL on your phone. The full docs are in
+[`orblings/README.md`](orblings/README.md).
